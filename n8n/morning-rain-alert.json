@@ -1,0 +1,48 @@
+{
+  "name": "케이웨더 — 아침 비 소식",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            { "field": "cronExpression", "expression": "0 7 * * *" }
+          ]
+        }
+      },
+      "id": "5f1d6c2e-0d3a-4c5e-9a51-1b7c0a7e0001",
+      "name": "매일 07:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "url": "https://apigw.kweather.co.kr/kw-10d/1111051500",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "id": "5f1d6c2e-0d3a-4c5e-9a51-1b7c0a7e0002",
+      "name": "케이웨더 10일 예보",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [240, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "// 앞 단계 응답에서 오늘 비 소식 만들기. 코드를 바꾸면 위 HTTP 주소의 코드도 같이 바꾸세요.\nconst code = \"1111051500\";\nconst d = $input.first().json.data[code].data;\nconst today = d.timelines.hourly[0].time.slice(0, 10);\n\nconst hours = d.timelines.hourly.filter((s) => s.time.startsWith(today));\nconst rainy = hours.filter((s) =>\n  (s.values.precipitation ?? 0) > 0 || (s.values.precipitationProbability ?? 0) >= 60);\n\n// daily 는 오후가 되면 오늘 칸이 빠질 수 있어, 오늘 최고는 시간별 값에서 구합니다\nconst max = Math.max(...hours.map((s) => s.values.temperature ?? -99));\nconst text = rainy.length\n  ? `☔ 오늘 ${rainy[0].time.slice(11, 16)}부터 비 소식이 있습니다. 우산 챙기세요.`\n  : `오늘은 비 소식이 없습니다. 남은 시간 최고 ${max}℃`;\n\nreturn [{ json: { text, rain: rainy.length > 0 } }];"
+      },
+      "id": "5f1d6c2e-0d3a-4c5e-9a51-1b7c0a7e0003",
+      "name": "비 소식 문장",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [480, 0]
+    }
+  ],
+  "connections": {
+    "매일 07:00": { "main": [[{ "node": "케이웨더 10일 예보", "type": "main", "index": 0 }]] },
+    "케이웨더 10일 예보": { "main": [[{ "node": "비 소식 문장", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "pinData": {}
+}

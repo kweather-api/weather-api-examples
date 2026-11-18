@@ -1,0 +1,14 @@
+{
+  "name": "kweather-weather-api-examples",
+  "private": true,
+  "type": "module",
+  "description": "KWeather Weather API examples (Node.js 18+, no dependencies)",
+  "engines": { "node": ">=18" },
+  "scripts": {
+    "first-call": "node first-call.mjs",
+    "by-location": "node by-location.mjs",
+    "fine-dust": "node fine-dust.mjs",
+    "world": "node world-weather.mjs"
+  },
+  "license": "MIT"
+}
